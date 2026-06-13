@@ -78,7 +78,11 @@ margin:10px 0;">
 </textarea>
 <input id="colors" placeholder="Colors (Red,Blue,Green)">
 <input id="sizes" placeholder="Sizes (S,M,L,XL)">
-<input id="image_url" placeholder="Image URL">
+<input type="file" id="productImage">
+
+<input
+type="hidden"
+id="image_url">
 <textarea
 id="color_images"
 placeholder='{"Red":"redimage.jpg","Blue":"blueimage.jpg"}'
@@ -111,6 +115,38 @@ const client = supabase.createClient(
     "https://cdonsgathfbkguvxalqf.supabase.co",
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkb25zZ2F0aGZia2d1dnhhbHFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODEwMjQsImV4cCI6MjA5NjU1NzAyNH0.-rR30MHXOiLNfBISYSwnzHLXCDsA9aTcFZAvcKcoOHE"
 );
+
+async function uploadImage(){
+
+    const file =
+    document.getElementById("productImage")
+    .files[0];
+
+    if(!file){
+        alert("Please select an image");
+        return null;
+    }
+
+    const fileName =
+    Date.now() + "_" + file.name;
+
+    const { error } =
+    await client.storage
+        .from("product-images")
+        .upload(fileName,file);
+
+    if(error){
+        alert(error.message);
+        return null;
+    }
+
+    const { data } =
+    client.storage
+        .from("product-images")
+        .getPublicUrl(fileName);
+
+    return data.publicUrl;
+}
 
 async function editProduct(id){
 
@@ -154,7 +190,12 @@ async function addProduct() {
     const description =document.getElementById("description").value;
     const colors = document.getElementById("colors").value;
     const sizes = document.getElementById("sizes").value;
-    const image_url = document.getElementById("image_url").value;
+    const image_url =
+await uploadImage();
+
+if(!image_url){
+    return;
+}
     const color_images =document.getElementById("color_images").value;
     const stock = document.getElementById("stock").value;
 
@@ -331,7 +372,17 @@ async function updateProduct(id){
     const description = document.getElementById("description").value;
     const colors = document.getElementById("colors").value;
     const sizes = document.getElementById("sizes").value;
-    const image_url = document.getElementById("image_url").value;
+    let image_url =
+document.getElementById("image_url").value;
+
+const file =
+document.getElementById("productImage")
+.files[0];
+
+if(file){
+    image_url =
+    await uploadImage();
+}
     const stock = document.getElementById("stock").value;
 
     const { error } = await client
