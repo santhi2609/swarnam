@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Checkout - SWARNAM</title>
+
+<style>
+body{
+    font-family: Arial;
+    padding: 20px;
+    background:#f5f5f5;
+}
+
+h1{
+    color:#5c0000;
+}
+
+#orderSummary{
+    background:white;
+    padding:15px;
+    margin-bottom:20px;
+    border-radius:8px;
+}
+
+input{
+    width:300px;
+    padding:10px;
+    margin:10px 0;
+    display:block;
+}
+
+button{
+    padding:10px 15px;
+    background:#5c0000;
+    color:white;
+    border:none;
+    cursor:pointer;
+    margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Checkout</h1>
+
+<!-- ORDER SUMMARY -->
+<div id="orderSummary"></div>
+
+<!-- USER DETAILS -->
+<input id="name" placeholder="Name">
+<input id="address" placeholder="Address">
+<input id="phone" placeholder="Phone">
+
+<button onclick="payNow()">Pay Now 💳</button>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+const SUPABASE_URL = "https://cdonsgathfbkguvxalqf.supabase.co";
+const SUPABASE_KEY = "YOUR_ANON_KEY";
+
+const client = supabase.createClient(
+    "https://cdonsgathfbkguvxalqf.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkb25zZ2F0aGZia2d1dnhhbHFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODEwMjQsImV4cCI6MjA5NjU1NzAyNH0.-rR30MHXOiLNfBISYSwnzHLXCDsA9aTcFZAvcKcoOHE"
+);
+
+// LOAD CART
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+let buyNowProduct =
+    JSON.parse(localStorage.getItem("buyNowProduct"));
+
+if(buyNowProduct){
+
+    cart = [
+        {
+            ...buyNowProduct,
+            quantity:1
+        }
+    ];
+
+}
+
+function showSummary(){
+
+    let container = document.getElementById("orderSummary");
+
+    let total = 0;
+
+    container.innerHTML = "<h3>Order Summary</h3>";
+
+    cart.forEach(item => {
+
+        const quantity = item.quantity || 1;
+
+        let subtotal = item.price * quantity;
+
+        total += subtotal;
+
+        container.innerHTML += `
+            <p>${item.name} x ${quantity} = ₹${subtotal}</p>
+        `;
+    });
+
+    container.innerHTML += `<h3>Total: ₹${total}</h3>`;
+}
+
+showSummary();
+
+
+// PLACE ORDER FUNCTION (HERE IT IS ADDED)
+async function placeOrder() {
+
+    if(cart.length === 0){
+        alert("Cart is empty");
+        return;
+    }
+
+    const name = document.getElementById("name").value;
+    const address = document.getElementById("address").value;
+    const phone = document.getElementById("phone").value;
+
+    if(!name || !address || !phone){
+        alert("Please fill all details");
+        return;
+    }
+
+    const { data: { session } } =
+        await client.auth.getSession();
+
+    if (!session) {
+        alert("Please login first");
+        window.location.href = "login.html";
+        return;
+    }
+
+    if (!session) {
+    alert("Please login first");
+    window.location.href = "login.html";
+    return;
+}
+
+// ADD THIS NEW CODE
+for(const item of cart){
+
+    if(item.stock <= 0){
+
+        alert(item.name + " is out of stock");
+
+        return;
+    }
+}
+
+let total = cart.reduce((sum, item) => {
+    return sum + item.price * (item.quantity || 1);
+}, 0);
+
+
+    const { error } = await client
+.from("orders")
+.insert([
+{
+    user_email: session.user.email,
+    name: name,
+    phone: phone,
+    address: address,
+    items: cart,
+    total_price: total
+}
+]);
+
+    if (error) {
+        alert(error.message);
+        return;
+    }
+    // UPDATE PRODUCT STOCK
+
+for (const item of cart) {
+
+    const newStock =
+        item.stock - (item.quantity || 1);
+
+    const { error: stockError } =
+        await client
+            .from("Products")
+            .update({
+                stock: newStock
+            })
+            .eq("id", item.id);
+
+    if(stockError){
+        console.log(stockError);
+    }
+}
+
+    alert("Order placed successfully!");
+
+    localStorage.removeItem("cart");
+
+    localStorage.removeItem("buyNowProduct");
+
+    window.location.href = "index.html";
+}
+
+</script>
+
+</body>
+</html>

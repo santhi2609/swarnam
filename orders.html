@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>My Orders - SWARNAM</title>
+
+<style>
+
+body{
+    font-family: Arial, sans-serif;
+    padding:20px;
+    background:#f5f5f5;
+}
+
+h1{
+    color:#5c0000;
+    margin-bottom:20px;
+}
+
+.home-btn{
+    background:#5c0000;
+    color:white;
+    border:none;
+    padding:10px 15px;
+    border-radius:5px;
+    cursor:pointer;
+    margin-bottom:20px;
+}
+
+.order-card{
+    background:white;
+    padding:15px;
+    margin:15px 0;
+    border-radius:10px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.1);
+}
+
+.order-card h3{
+    color:#333;
+    margin-bottom:10px;
+}
+
+.order-card p{
+    margin:6px 0;
+}
+
+.items-section{
+    margin-top:10px;
+    padding-top:10px;
+    border-top:1px solid #ddd;
+}
+
+.item{
+    padding:5px 0;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>My Orders 📦</h1>
+
+<button
+class="home-btn"
+onclick="window.location.href='index.html'">
+🏠 Back To Home
+</button>
+
+<div id="ordersContainer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+// ==========================
+// SUPABASE INIT
+// ==========================
+
+const client = supabase.createClient(
+    "https://cdonsgathfbkguvxalqf.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkb25zZ2F0aGZia2d1dnhhbHFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODEwMjQsImV4cCI6MjA5NjU1NzAyNH0.-rR30MHXOiLNfBISYSwnzHLXCDsA9aTcFZAvcKcoOHE"
+);
+
+// ==========================
+// LOAD ORDERS
+// ==========================
+
+async function loadOrders(){
+
+    const {
+        data:{ session }
+    } = await client.auth.getSession();
+
+    if(!session){
+
+        alert("Please login first");
+
+        window.location.href = "login.html";
+
+        return;
+    }
+
+    const {
+        data,
+        error
+    } = await client
+        .from("orders")
+        .select("*")
+        .eq(
+            "user_email",
+            session.user.email
+        )
+        .order(
+            "id",
+            { ascending:false }
+        );
+
+    const container =
+        document.getElementById(
+            "ordersContainer"
+        );
+
+    container.innerHTML = "";
+
+    if(error){
+
+        console.log(error);
+
+        container.innerHTML =
+            "<h3 style='color:red;'>Error Loading Orders</h3>";
+
+        return;
+    }
+
+    if(!data || data.length === 0){
+
+        container.innerHTML =
+            "<h3>No Orders Found 🛒</h3>";
+
+        return;
+    }
+
+    data.forEach(order => {
+
+        container.innerHTML += `
+
+        <div class="order-card">
+
+            <h3>
+                Order #${order.id}
+            </h3>
+
+            <p>
+                <b>Total:</b>
+                ₹${order.total_price}
+            </p>
+
+            <p>
+                <b>Address:</b>
+                ${order.address}
+            </p>
+
+            <p>
+                <b>Date:</b>
+                ${
+                    order.created_at
+                    ? new Date(order.created_at).toLocaleString()
+                    : "N/A"
+                }
+            </p>
+
+            <div class="items-section">
+
+                <h4>Items:</h4>
+
+                ${
+                    order.items.map(item => `
+                        <div class="item">
+                            🛍️ ${item.name}
+                            x ${item.quantity || 1}
+                            - ₹${item.price}
+                        </div>
+                    `).join("")
+                }
+
+            </div>
+
+        </div>
+
+        `;
+    });
+}
+
+// ==========================
+// RUN
+// ==========================
+
+loadOrders();
+
+</script>
+
+</body>
+</html>

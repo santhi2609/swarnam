@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Orders</title>
+</head>
+<body>
+
+<h1>All Orders 📦</h1>
+
+<div id="orders"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+const client = supabase.createClient(
+    "https://cdonsgathfbkguvxalqf.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkb25zZ2F0aGZia2d1dnhhbHFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODEwMjQsImV4cCI6MjA5NjU1NzAyNH0.-rR30MHXOiLNfBISYSwnzHLXCDsA9aTcFZAvcKcoOHE"
+);
+
+
+async function loadOrders(){
+
+    const { data, error } = await client
+        .from("orders")
+        .select("*")
+        .order("id",{ascending:false});
+    
+    console.log("DATA:", data);
+    console.log("ERROR:", error);
+
+    const container =
+        document.getElementById("orders");
+
+    if(error){
+        console.log(error);
+        return;
+    }
+
+    data.forEach(order=>{
+
+        container.innerHTML += `
+        <div style="
+            background:white;
+            padding:15px;
+            margin:15px;
+            border-radius:10px;
+        ">
+
+        <h3>Order #${order.id}</h3>
+
+        <p>Email:
+        ${order.user_email}</p>
+
+        <p>Name:
+        ${order.name}</p>
+
+        <p>Phone:
+        ${order.phone}</p>
+
+        <p>Address:
+        ${order.address}</p>
+
+        <p>Total:
+        ₹${order.total_price}</p>
+
+        <p>
+        Status:
+        <b>${order.status || "Pending"}</b>
+        </p>
+
+        <p>Date:
+        ${new Date(order.created_at).toLocaleString()}
+        </p>
+
+        <select
+    onchange="updateStatus(${order.id}, this.value)">
+
+    <option value="Pending"
+    ${order.status==="Pending"?"selected":""}>
+    Pending
+    </option>
+
+    <option value="Confirmed"
+    ${order.status==="Confirmed"?"selected":""}>
+    Confirmed
+    </option>
+
+    <option value="Packed"
+    ${order.status==="Packed"?"selected":""}>
+    Packed
+    </option>
+
+    <option value="Shipped"
+    ${order.status==="Shipped"?"selected":""}>
+    Shipped
+    </option>
+
+    <option value="Delivered"
+    ${order.status==="Delivered"?"selected":""}>
+    Delivered
+    </option>
+
+    <option value="Cancelled"
+    ${order.status==="Cancelled"?"selected":""}>
+    Cancelled
+    </option>
+
+</select>
+
+<h4>Items:</h4>
+
+${
+    order.items.map(item => `
+        <p>
+            ${item.name}
+            x ${item.quantity || 1}
+            - ₹${item.price}
+        </p>
+    `).join("")
+}
+
+</div>
+        </div>
+        `;
+    });
+}
+
+async function updateStatus(id,status){
+
+    const { error } =
+        await client
+        .from("orders")
+        .update({
+            status:status
+        })
+        .eq("id",id);
+
+    if(error){
+        alert(error.message);
+        return;
+    }
+
+    alert("Status Updated");
+
+    document.getElementById("orders")
+        .innerHTML = "";
+
+    loadOrders();
+}
+
+loadOrders();
+
+</script>
+
+</body>
+</html>

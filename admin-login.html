@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Login</title>
+
+<style>
+body{
+    font-family: Arial;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    background:#f5f5f5;
+}
+
+.box{
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+
+input{
+    display:block;
+    margin:10px 0;
+    padding:10px;
+    width:250px;
+}
+
+button{
+    padding:10px;
+    background:#5c0000;
+    color:white;
+    border:none;
+    width:100%;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+    <h2>Admin Login</h2>
+
+    <input id="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+
+    <button onclick="login()">Login</button>
+</div>
+
+<script>
+
+function login(){
+
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    // SIMPLE HARD-CODED ADMIN CHECK
+    if(email === "admin@swarnam.com" && password === "1234"){
+        
+        localStorage.setItem("admin", "true");
+
+        alert("Login successful");
+
+        window.location.href = "admin.html";
+    }
+    else{
+        alert("Invalid admin credentials");
+    }
+}
+
+</script>
+
+</body>
+</html>

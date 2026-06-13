@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>My Orders - SWARNAM</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f5f5f5;
+padding:20px;
+}
+
+.order-card{
+
+background:white;
+padding:20px;
+margin:20px;
+border-radius:10px;
+box-shadow:0 2px 10px rgba(0,0,0,0.1);
+
+}
+
+.status{
+
+font-weight:bold;
+color:#5c0000;
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<h1>
+My Orders 📦
+</h1>
+
+
+<div id="orders"></div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+<script>
+
+
+const client = supabase.createClient(
+
+"https://cdonsgathfbkguvxalqf.supabase.co",
+
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkb25zZ2F0aGZia2d1dnhhbHFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODEwMjQsImV4cCI6MjA5NjU1NzAyNH0.-rR30MHXOiLNfBISYSwnzHLXCDsA9aTcFZAvcKcoOHE"
+
+);
+
+
+
+async function loadMyOrders(){
+
+
+const {data:{session}} =
+await client.auth.getSession();
+
+
+
+if(!session){
+
+alert("Please login first");
+
+window.location.href="login.html";
+
+return;
+
+}
+
+
+
+const {data,error}=
+
+await client
+
+.from("orders")
+
+.select("*")
+
+.eq("user_email",session.user.email)
+
+.order("id",{ascending:false});
+
+
+
+
+const box =
+document.getElementById("orders");
+
+
+
+box.innerHTML="";
+
+
+
+if(error){
+
+console.log(error);
+
+return;
+
+}
+
+
+
+if(data.length===0){
+
+box.innerHTML=
+"<h2>No Orders Found</h2>";
+
+return;
+
+}
+
+
+
+data.forEach(order=>{
+
+
+box.innerHTML += `
+
+
+<div class="order-card">
+
+
+<h2>
+Order #${order.id}
+</h2>
+
+
+
+<p>
+Total:
+₹${order.total_price}
+</p>
+
+
+
+<p>
+Status:
+<span class="status">
+${order.status || "Pending"}
+</span>
+</p>
+
+
+
+<h3>
+Products
+</h3>
+
+
+
+${
+order.items.map(item=>`
+
+<p>
+${item.name}
+x ${item.quantity || 1}
+-
+₹${item.price}
+</p>
+
+`).join("")
+}
+
+
+
+<p>
+Date:
+${new Date(order.created_at).toLocaleString()}
+</p>
+
+
+
+</div>
+
+
+`;
+
+
+});
+
+
+}
+
+
+
+loadMyOrders();
+
+
+
+</script>
+
+
+</body>
+
+</html>

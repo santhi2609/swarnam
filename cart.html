@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shopping Cart</title>
+
+    <style>
+        body{
+            font-family:Arial;
+            padding:20px;
+        }
+
+        .cart-item{
+            display:flex;
+            gap:20px;
+            border:1px solid #ddd;
+            padding:15px;
+            margin-bottom:15px;
+        }
+
+        .cart-item img{
+            width:120px;
+            height:150px;
+            object-fit:cover;
+        }
+
+        .price{
+            color:#5c0000;
+            font-weight:bold;
+        }
+
+        button{
+            background:red;
+            color:white;
+            border:none;
+            padding:8px 12px;
+            cursor:pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>My Cart 🛒</h1>
+
+<div id="cart-container"></div>
+
+<script>
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+
+function loadCart(){
+
+    let cart =
+    JSON.parse(localStorage.getItem("cart")) || [];
+
+
+    const container =
+    document.getElementById("cart-container");
+
+
+    container.innerHTML = "";
+
+
+    if(cart.length === 0){
+
+        container.innerHTML =
+        "<h2>Your Cart Is Empty</h2>";
+
+        return;
+
+    }
+
+
+    let grandTotal = 0;
+
+
+    cart.forEach((product,index)=>{
+
+
+        const quantity =
+        product.quantity || 1;
+
+
+        const subtotal =
+        product.price * quantity;
+
+
+        grandTotal += subtotal;
+
+
+
+        container.innerHTML += `
+
+
+        <div class="cart-item">
+
+
+            <img src="${product.image_url}">
+
+
+            <div>
+
+
+                <h2>
+                ${product.name}
+                </h2>
+
+
+                <p class="price">
+                ₹${product.price}
+                </p>
+
+
+                <p>
+                Category:
+                ${product.category}
+                </p>
+
+
+                <p>
+                Stock:
+                ${product.stock}
+                </p>
+
+
+
+                <p>
+                Quantity:
+                </p>
+
+
+                <button onclick="decreaseQty(${index})">
+                -
+                </button>
+
+
+                <b>
+                ${quantity}
+                </b>
+
+
+                <button onclick="increaseQty(${index})">
+                +
+                </button>
+
+
+
+                <p>
+                Subtotal:
+                ₹${subtotal}
+                </p>
+
+
+
+                <button onclick="removeItem(${index})">
+                Remove
+                </button>
+
+
+            </div>
+
+
+        </div>
+
+
+        `;
+
+
+    });
+
+
+
+    container.innerHTML += `
+
+    <h2>
+    Grand Total:
+    ₹${grandTotal}
+    </h2>
+
+
+    <button onclick="checkout()">
+    Proceed To Checkout
+    </button>
+
+    `;
+
+
+}
+
+
+
+function increaseQty(index){
+
+
+    let cart =
+    JSON.parse(localStorage.getItem("cart")) || [];
+
+
+    if(cart[index].quantity >= cart[index].stock){
+
+
+        alert(
+        "Only " + cart[index].stock + " available"
+        );
+
+        return;
+
+    }
+
+
+
+    cart[index].quantity =
+    (cart[index].quantity || 1)+1;
+
+
+
+    saveCart(cart);
+
+}
+
+
+
+
+
+function decreaseQty(index){
+
+
+    let cart =
+    JSON.parse(localStorage.getItem("cart")) || [];
+
+
+    if((cart[index].quantity || 1)>1){
+
+        cart[index].quantity--;
+
+    }
+
+
+    saveCart(cart);
+
+}
+
+
+
+
+
+function removeItem(index){
+
+
+    let cart =
+    JSON.parse(localStorage.getItem("cart")) || [];
+
+
+    cart.splice(index,1);
+
+
+    saveCart(cart);
+
+}
+
+
+
+
+function saveCart(cart){
+
+
+    localStorage.setItem(
+        "cart",
+        JSON.stringify(cart)
+    );
+
+
+    loadCart();
+
+}
+
+
+
+
+function checkout(){
+
+
+    let cart =
+    JSON.parse(localStorage.getItem("cart")) || [];
+
+
+    if(cart.length===0){
+
+        alert("Cart is empty");
+        return;
+
+    }
+
+
+    window.location.href="checkout.html";
+
+
+}
+
+
+
+loadCart();
+</script>
+
+</body>
+</html>
