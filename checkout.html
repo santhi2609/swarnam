@@ -78,6 +78,18 @@ if(buyNowProduct){
     ];
 }
 
+function calculateTotal(){
+
+    return cart.reduce((sum,item)=>{
+
+        return sum +
+            item.price *
+            (item.quantity || 1);
+
+    },0);
+
+}
+
 function showSummary(){
 
     let container =
@@ -114,69 +126,83 @@ function showSummary(){
 
 showSummary();
 
-async function payNow(){
+async function payNow() {
 
-    const name =
-        document.getElementById("name").value;
+    const total = calculateTotal();
 
-    const address =
-        document.getElementById("address").value;
+    const response = await fetch(
+        "/.netlify/functions/create-order",
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                amount: total * 100
+            })
+        }
+    );
 
-    const phone =
-        document.getElementById("phone").value;
-
-    if(!name || !address || !phone){
-
-        alert("Please fill all details");
-
-        return;
-    }
-
-    let total = cart.reduce((sum,item)=>{
-
-        return sum +
-            item.price *
-            (item.quantity || 1);
-
-    },0);
+    const order = await response.json();
 
     const options = {
 
-        key: "rzp_test_T1nVwnDURwOBm8",
+        // IMPORTANT: put your Razorpay KEY ID here
+        key: "rzp_live_T2gsgCE29zr7uE",
 
-        amount: total * 100,
+        amount: order.amount,
+        currency: order.currency,
 
-        currency: "INR",
+        // FIXED
+        order_id: order.order_id,
 
         name: "SWARNAM",
+        description: "Order Payment",
 
-        description: "Fashion Order",
+        handler: async function(response) {
 
-        handler: async function(response){
-
-            console.log(response);
-
-            await placeOrder(
-                response.razorpay_payment_id
+            const verify = await fetch(
+                "/.netlify/functions/verify-payment",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        razorpay_order_id:
+                            response.razorpay_order_id,
+                        razorpay_payment_id:
+                            response.razorpay_payment_id,
+                        razorpay_signature:
+                            response.razorpay_signature
+                    })
+                }
             );
+
+            const result = await verify.json();
+
+            if(result.success){
+
+                // FIX: use correct function
+                await placeOrder(response.razorpay_payment_id);
+
+            } else {
+                alert("Payment verification failed");
+            }
         },
 
-        prefill: {
-            name: name,
-            contact: phone
-        },
-
-        notes: {
-            address: address
-        },
-
-        theme: {
-            color:"#5c0000"
+        modal: {
+            ondismiss: function () {
+                alert("Payment cancelled");
+            }
         }
     };
 
-    const rzp =
-        new Razorpay(options);
+    const rzp = new Razorpay(options);
+
+    rzp.on("payment.failed", function (response) {
+        alert(response.error.description);
+    });
 
     rzp.open();
 }
