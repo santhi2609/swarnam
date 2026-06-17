@@ -1,0 +1,4 @@
+.env
+netlify/functions/.env
+node_modules
+swarnam_files/
