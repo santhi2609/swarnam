@@ -145,10 +145,13 @@ async function payNow() {
 
     const order = await response.json();
 
+    const keyResponse = await fetch("/.netlify/functions/get-key");
+    const keyData = await keyResponse.json();
+
     const options = {
 
         // IMPORTANT: put your Razorpay KEY ID here
-        key: "rzp_live_T2gsgCE29zr7uE",
+        key: keyData.key,
 
         amount: order.amount,
         currency: order.currency,
