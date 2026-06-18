@@ -12,6 +12,10 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
+    if(localStorage.getItem("admin") !== "true"){
+    alert("Please login as admin");
+    window.location.href = "admin-login.html";
+}
 
 const client = supabase.createClient(
     "https://cdonsgathfbkguvxalqf.supabase.co",
