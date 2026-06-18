@@ -104,10 +104,15 @@ padding:10px;">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
+
+<script>
+
 if(localStorage.getItem("admin") !== "true"){
-    alert("Access denied");
+    alert("Please login as admin");
     window.location.href = "admin-login.html";
 }
+
+...
 // ==========================
 // SUPABASE INIT
 // ==========================
